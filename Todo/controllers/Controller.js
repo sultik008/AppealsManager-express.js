@@ -8,6 +8,8 @@ export async function addAppeal(req, res) {
       status: "Новое",
       description: req.body.description,
       date: Date.now(),
+      solve: " ",
+      reason: " ",
     });
 
     await newAppeal.save();
@@ -191,6 +193,43 @@ export async function deleteAppeal(req, res) {
   } catch (error) {
     res.status(500).json({
       message: "Ошибка при удалении запроса",
+      error: error.message,
+    });
+  }
+}
+export async function GetbyDateAppeals(req, res) {
+  try {
+    const { date, startDate, endDate } = req.query;
+
+    let filter = {};
+
+    if (date) {
+      const targetDate = new Date(date);
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      filter.date = {
+        $gte: targetDate,
+        $lt: nextDay
+      };
+    }
+
+    if (startDate && endDate) {
+      filter.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const appeals = await Appeal.find(filter).sort({ date: -1 });
+
+    res.status(200).json({
+      message: 'Список обращений',
+      appeals: appeals
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Ошибка при получении запросов по дате",
       error: error.message,
     });
   }
